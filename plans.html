@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Choose Your Plan</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .plan-detail { display: none; margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+    .plan-card.selected .plan-detail { display: block; }
+    .plan-card.selected .plan-price { color: var(--accent); }
+    .pct-row { display: flex; gap: 8px; margin-top: 0.5rem; align-items: center; font-size: 0.78rem; }
+    .pct-bar-bg { flex: 1; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+    .pct-bar-fill { height: 100%; border-radius: 2px; }
+    .best-tag { position: absolute; top: -1px; right: -1px; background: var(--accent); color: #0a0a0a; font-size: 0.68rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 0 var(--radius) 0 var(--radius-sm); letter-spacing: 0.05em; }
+    .match-score { font-size: 0.75rem; color: var(--text3); margin-top: 0.5rem; display: flex; align-items: center; gap: 6px; }
+    .match-dots { display: flex; gap: 3px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bg4); }
+    .dot.on { background: var(--accent); }
+    .why-block { background: var(--bg3); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Trip<span>Wise</span></div>
+  <nav class="header-nav">
+    <a href="setup.html">← back</a>
+    <a href="index.html" onclick="TW.clear()">sign out</a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <div class="progress-bar mb-2">
+    <div class="progress-step done">1. setup</div>
+    <div class="progress-step active">2. plans</div>
+    <div class="progress-step">3. itinerary</div>
+    <div class="progress-step">4. logistics</div>
+    <div class="progress-step">5. budget</div>
+  </div>
+
+  <div class="fade-up">
+    <h1 class="display" style="font-size:1.8rem;margin-bottom:0.3rem" id="page-title">3 plans for your trip</h1>
+    <p id="page-sub" class="mb-2">same destination, different strategies — all tailored to your preferences</p>
+  </div>
+
+  <!-- Why these plans block -->
+  <div class="why-block fade-up-2" id="why-block">
+    <div class="section-label" style="margin-bottom:0.5rem">why these recommendations</div>
+    <div id="why-text" class="text-sm text-muted" style="line-height:1.7"></div>
+  </div>
+
+  <!-- Plan cards -->
+  <div class="plan-grid fade-up-3" id="plan-cards">
+
+    <div class="plan-card" data-plan="budget" onclick="selectPlan(this,'budget')" style="position:relative">
+      <div class="plan-label">budget traveler</div>
+      <div class="plan-price" id="price-budget">$1,240</div>
+      <div class="plan-desc">Max experience per dollar. Stay near walking-distance attractions. Metro everywhere.</div>
+      <div class="match-score">
+        <div class="match-dots">
+          <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div>
+        </div>
+        <span>great match for your preferences</span>
+      </div>
+      <div class="plan-detail">
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">walking</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:70%;background:var(--green)"></div></div><span>70%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">metro</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:25%;background:var(--blue)"></div></div><span>25%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">cab</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:5%;background:var(--accent)"></div></div><span>5%</span></div>
+        <p class="text-xs text-dim" style="margin-top:0.6rem;line-height:1.5">Stay in Asakusa — 7 of your 10 itinerary stops are within walking distance. Use 24hr metro pass ($10/day).</p>
+      </div>
+    </div>
+
+    <div class="plan-card selected" data-plan="smart" onclick="selectPlan(this,'smart')" style="position:relative">
+      <div class="best-tag">recommended</div>
+      <div class="plan-label">smart explorer</div>
+      <div class="plan-price" id="price-smart">$1,850</div>
+      <div class="plan-desc">Central hotel, mixed transport, optimised for your interests. Best balance of cost and comfort.</div>
+      <div class="match-score">
+        <div class="match-dots">
+          <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+        </div>
+        <span>perfect match</span>
+      </div>
+      <div class="plan-detail">
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">walking</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:50%;background:var(--green)"></div></div><span>50%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">metro</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:35%;background:var(--blue)"></div></div><span>35%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">cab</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:15%;background:var(--accent)"></div></div><span>15%</span></div>
+        <p class="text-xs text-dim" style="margin-top:0.6rem;line-height:1.5">Hotel in Ueno gives access to history corridor + fast metro to Shibuya. Breakfast included saves $15/day.</p>
+      </div>
+    </div>
+
+    <div class="plan-card" data-plan="luxury" onclick="selectPlan(this,'luxury')" style="position:relative">
+      <div class="plan-label">luxury comfort</div>
+      <div class="plan-price" id="price-luxury">$3,100</div>
+      <div class="plan-desc">Premium hotel, private transfers, skip queues. Zero stress, maximum comfort.</div>
+      <div class="match-score">
+        <div class="match-dots">
+          <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <span>good match — above your budget</span>
+      </div>
+      <div class="plan-detail">
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">walking</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:30%;background:var(--green)"></div></div><span>30%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">private</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:60%;background:var(--accent)"></div></div><span>60%</span></div>
+        <div class="pct-row"><span style="width:55px;color:var(--text3)">metro</span><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:10%;background:var(--blue)"></div></div><span>10%</span></div>
+        <p class="text-xs text-dim" style="margin-top:0.6rem;line-height:1.5">Rooftop hotel in Asakusa with temple view. Private guide for Day 1. Skip-the-line included at all major sites.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Budget warning if luxury selected -->
+  <div id="budget-warning" class="card warn" style="display:none">
+    <div class="flex-between">
+      <div>
+        <div class="fw-500 text-sm" style="color:var(--red);margin-bottom:0.25rem">this plan exceeds your budget</div>
+        <div class="text-xs text-dim">Luxury plan is ~$<span id="over-amount">1,100</span> over your $<span id="your-budget">2,000</span> budget. You can still pick it — just go in with eyes open.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary of selection -->
+  <div id="selection-summary" class="card success fade-up-4" style="margin-top:1.25rem">
+    <div class="section-label" style="margin-bottom:0.5rem">your selection</div>
+    <div class="flex-between">
+      <div>
+        <div class="fw-500" id="sel-name">Smart Explorer</div>
+        <div class="text-xs text-dim mt-1" id="sel-detail">$1,850 total · 5 days · 50% walkable</div>
+      </div>
+      <div class="text-accent fw-500 text-sm" id="sel-budget-status">within budget ✓</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-full btn-lg" style="margin-top:1.5rem" onclick="saveAndContinue()">
+    see my day-by-day itinerary →
+  </button>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  TW.requireAuth();
+  const setup = TW.load('setup', {});
+  const budget = setup.budget || 2000;
+  const dest   = setup.dest   || 'your destination';
+  const prefs  = setup.prefs  || [];
+
+  document.getElementById('page-title').textContent = '3 plans for ' + dest;
+  document.getElementById('your-budget').textContent = budget.toLocaleString();
+
+  // set plan prices based on budget
+  const prices = { budget: Math.round(budget * 0.62), smart: Math.round(budget * 0.925), luxury: Math.round(budget * 1.55) };
+  document.getElementById('price-budget').textContent = '$' + prices.budget.toLocaleString();
+  document.getElementById('price-smart').textContent  = '$' + prices.smart.toLocaleString();
+  document.getElementById('price-luxury').textContent = '$' + prices.luxury.toLocaleString();
+  document.getElementById('over-amount').textContent  = (prices.luxury - budget).toLocaleString();
+
+  // personalised why block
+  const who   = setup.who || 'solo';
+  const pace  = setup.pace || 'balanced';
+  const prefStr = prefs.length ? prefs.slice(0,3).join(', ') : 'general sightseeing';
+  const constraint = setup.constraints || {};
+
+  let whyText = `Based on your interest in ${prefStr} and a ${pace} pace, we've prioritised itineraries that keep you near ${dest}'s history and culture belt. `;
+  if (constraint.no_long_walk) whyText += 'Since you can\'t walk for long stretches, we\'ve chosen accommodations with the most walkable clusters so you do short strolls, not long treks. ';
+  if (constraint.rest_zones)   whyText += 'Rest zone availability is flagged at every stop. ';
+  if (who === 'with kids')     whyText += 'Kid-friendly routes prioritised — shorter distances, stroller-accessible paths, and zoo/aquarium stops included. ';
+  whyText += `The Smart Explorer is recommended — it hits 90% of your preferences while staying within your $${budget.toLocaleString()} budget.`;
+  document.getElementById('why-text').textContent = whyText;
+
+  let selectedPlan = 'smart';
+
+  function selectPlan(card, plan) {
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedPlan = plan;
+
+    const names   = { budget: 'Budget Traveler', smart: 'Smart Explorer', luxury: 'Luxury Comfort' };
+    const details = {
+      budget:  `$${prices.budget.toLocaleString()} total · ${setup.days||5} days · 70% walkable`,
+      smart:   `$${prices.smart.toLocaleString()} total · ${setup.days||5} days · 50% walkable`,
+      luxury:  `$${prices.luxury.toLocaleString()} total · ${setup.days||5} days · 30% walkable`,
+    };
+    document.getElementById('sel-name').textContent   = names[plan];
+    document.getElementById('sel-detail').textContent = details[plan];
+
+    const isOver = prices[plan] > budget;
+    document.getElementById('budget-warning').style.display = (plan === 'luxury' && isOver) ? 'block' : 'none';
+    document.getElementById('sel-budget-status').textContent = isOver ? 'over budget ⚠' : 'within budget ✓';
+    document.getElementById('sel-budget-status').style.color = isOver ? 'var(--red)' : 'var(--green)';
+  }
+
+  function saveAndContinue() {
+    TW.save('plan', { type: selectedPlan, price: prices[selectedPlan] });
+    window.location.href = 'itinerary.html';
+  }
+</script>
+</body>
+</html>

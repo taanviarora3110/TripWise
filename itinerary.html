@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Your Itinerary</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- AI loading state ---- */
+    .ai-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .ai-spinner {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ai-loading-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+    .ai-loading-sub {
+      font-size: 0.82rem;
+      color: var(--text3);
+      max-width: 300px;
+      line-height: 1.6;
+    }
+    .ai-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 320px;
+    }
+    .ai-step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text3);
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .ai-step.active {
+      color: var(--accent);
+      border-color: rgba(232,201,126,0.3);
+      background: rgba(232,201,126,0.04);
+    }
+    .ai-step.done { color: var(--green); border-color: rgba(111,207,151,0.2); }
+    .ai-step-icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ---- fallback notice ---- */
+    .ai-fallback-notice {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      background: rgba(232,201,126,0.06);
+      border: 1px solid rgba(232,201,126,0.15);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      color: var(--text3);
+      margin-bottom: 1rem;
+    }
+
+    /* ---- AI badge ---- */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.2rem 0.65rem;
+      background: rgba(232,201,126,0.12);
+      border: 1px solid rgba(232,201,126,0.25);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Trip<span>Wise</span></div>
+  <nav class="header-nav">
+    <a href="plans.html">← back</a>
+    <a href="index.html" onclick="TW.clear()">sign out</a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <div class="progress-bar mb-2">
+    <div class="progress-step done">1. setup</div>
+    <div class="progress-step done">2. plans</div>
+    <div class="progress-step active">3. itinerary</div>
+    <div class="progress-step">4. logistics</div>
+    <div class="progress-step">5. budget</div>
+  </div>
+
+  <div class="fade-up flex-between" style="margin-bottom:0.3rem">
+    <h1 class="display" style="font-size:1.8rem" id="page-title">
+      your itinerary
+    </h1>
+    <div id="plan-badge" class="badge"></div>
+  </div>
+  <p class="mb-2 fade-up-2" id="page-sub"></p>
+
+  <!-- kid mode toggle (shown if with kids) -->
+  <div id="kidmode-row" style="display:none" class="card fade-up-2" style="margin-bottom:1rem">
+    <div class="flex-between">
+      <div>
+        <div class="fw-500 text-sm">kid mode</div>
+        <div class="text-xs text-dim mt-1">toggle for stroller-friendly, kid-safe activities only</div>
+      </div>
+      <div class="toggle-switch on" id="kid-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+
+  <!-- ---- AI LOADING STATE ---- -->
+  <div id="ai-loading-block" class="card fade-up-3">
+    <div class="ai-loading">
+      <div class="ai-spinner"></div>
+      <div class="ai-loading-title">Building your personalised itinerary</div>
+      <div class="ai-loading-sub" id="ai-loading-sub">
+        Analysing your preferences and constraints...
+      </div>
+      <div class="ai-steps" id="ai-steps">
+        <div class="ai-step active" id="step-1"><span class="ai-step-icon">🎯</span> Reading your preferences &amp; constraints</div>
+        <div class="ai-step" id="step-2"><span class="ai-step-icon">🗺️</span> Planning geographic flow per day</div>
+        <div class="ai-step" id="step-3"><span class="ai-step-icon">💡</span> Adding honest reality checks &amp; tips</div>
+        <div class="ai-step" id="step-4"><span class="ai-step-icon">✅</span> Finalising your custom itinerary</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- ITINERARY CONTENT (hidden until loaded) ---- -->
+  <div id="itinerary-content" style="display:none">
+
+    <!-- fallback notice shown only when AI was unavailable -->
+    <div id="fallback-notice" class="ai-fallback-notice" style="display:none">
+      <span>⚠</span>
+      <span>AI personalisation unavailable — showing a sample itinerary. Check your API key or network and refresh to try again.</span>
+    </div>
+
+    <!-- day tabs -->
+    <div class="day-tabs fade-up-3" id="day-tabs"></div>
+
+    <!-- day stats -->
+    <div class="stat-row fade-up-3" id="day-stats"></div>
+
+    <!-- reality check / warn -->
+    <div id="day-reality" style="margin-bottom:1rem"></div>
+
+    <!-- activities -->
+    <div class="card fade-up-4" id="activities-container" style="padding:0 1.25rem"></div>
+
+    <button class="btn btn-primary btn-full btn-lg" style="margin-top:1.5rem" onclick="TW.go('logistics.html')">
+      see flights, hotels &amp; transport →
+    </button>
+
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  TW.requireAuth();
+
+  const setup = TW.load('setup', {});
+  const plan  = TW.load('plan', { type: 'smart', price: 1850 });
+  const days  = parseInt(setup.days) || 5;
+  const dest  = setup.dest || 'your destination';
+  const prefs = setup.prefs || [];
+  const pace  = setup.pace  || 'balanced';
+  const who   = setup.who   || 'solo';
+
+  // Page header
+  document.getElementById('page-title').textContent = dest + ' — itinerary';
+  document.getElementById('page-sub').textContent =
+    (prefs.slice(0,3).join(' · ') || 'custom plan') + ' · ' + pace + ' pace · ' + days + ' days';
+
+  const planBadge = { budget: 'budget traveler', smart: 'smart explorer', luxury: 'luxury comfort' };
+  const planBadgeEl = document.getElementById('plan-badge');
+  planBadgeEl.textContent = planBadge[plan.type] || '';
+  planBadgeEl.className = 'badge ' + (plan.type === 'budget' ? 'badge-walk' : plan.type === 'luxury' ? 'badge-cab' : 'badge-metro');
+
+  if (who === 'with kids') document.getElementById('kidmode-row').style.display = 'block';
+
+  // Animate AI loading steps
+  const stepIds = ['step-1', 'step-2', 'step-3', 'step-4'];
+  let stepIndex = 0;
+  const stepInterval = setInterval(() => {
+    if (stepIndex > 0) {
+      document.getElementById(stepIds[stepIndex - 1]).classList.remove('active');
+      document.getElementById(stepIds[stepIndex - 1]).classList.add('done');
+    }
+    if (stepIndex < stepIds.length) {
+      document.getElementById(stepIds[stepIndex]).classList.add('active');
+      stepIndex++;
+    } else {
+      clearInterval(stepInterval);
+    }
+  }, 900);
+
+  // ---- RENDER ITINERARY ----
+  let itinerary = [];
+
+  function renderDay(n) {
+    const idx  = Math.min(n - 1, itinerary.length - 1);
+    const data = itinerary[idx];
+    if (!data) return;
+
+    // Stats row
+    const walkColor = data.stats.walkPct >= 60 ? 'var(--green)' : 'var(--accent)';
+    document.getElementById('day-stats').innerHTML = `
+      <div class="stat-box"><div class="stat-num">${data.stats.activities}</div><div class="stat-lbl">activities</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:${walkColor}">${data.stats.walkPct}%</div><div class="stat-lbl">free (walking)</div></div>
+      <div class="stat-box"><div class="stat-num">$${data.stats.transportCost}</div><div class="stat-lbl">transport cost</div></div>
+    `;
+
+    // Reality / warn
+    const realityEl = document.getElementById('day-reality');
+    let realityHtml = '';
+    if (data.warn)    realityHtml += `<div class="reality bad"><div class="label">budget warning</div>${data.warn}</div>`;
+    if (data.reality) realityHtml += `<div class="reality"><div class="label">reality check</div>${data.reality}</div>`;
+    realityEl.innerHTML = realityHtml;
+
+    // Activities
+    const container = document.getElementById('activities-container');
+    container.innerHTML = (data.activities || []).map(a => {
+      const transportBadges = (a.transport || []).map(t => {
+        const cls = { walk: 'badge-walk', metro: 'badge-metro', cab: 'badge-cab', free: 'badge-free', bus: 'badge-metro', ferry: 'badge-metro' }[t.type] || 'badge-walk';
+        return `<span class="badge ${cls}">${t.label}</span>`;
+      }).join('');
+
+      let actReality = '';
+      if (a.reality) {
+        const rCls = a.reality.type === 'warn' ? 'bad' : '';
+        actReality = `<div class="reality ${rCls}" style="margin-top:0.5rem">
+          <div class="label">${a.reality.type === 'warn' ? 'heads up' : 'reality check'}</div>
+          ${a.reality.text}
+        </div>`;
+      }
+
+      return `
+        <div class="activity-row">
+          <div class="activity-time">${a.time}</div>
+          <div class="activity-body">
+            <div class="activity-title">${a.title}</div>
+            <div class="activity-meta">${a.meta}</div>
+            <div class="badge-row">${transportBadges}</div>
+            ${actReality}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function buildDayTabs() {
+    const tabsEl  = document.getElementById('day-tabs');
+    const numDays = Math.min(days, itinerary.length);
+    tabsEl.innerHTML = '';
+
+    for (let i = 1; i <= numDays; i++) {
+      const dayData = itinerary[i - 1];
+      const label   = dayData ? dayData.title : 'day ' + i;
+      const btn     = document.createElement('button');
+      btn.className    = 'day-tab' + (i === 1 ? ' active' : '');
+      btn.dataset.day  = i;
+      btn.textContent  = 'day ' + i + (label && label !== 'day ' + i ? ' — ' + label : '');
+      btn.onclick = () => {
+        tabsEl.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        renderDay(i);
+      };
+      tabsEl.appendChild(btn);
+    }
+  }
+
+  function showItinerary(isFallback) {
+    clearInterval(stepInterval);
+
+    // Complete all steps visually
+    stepIds.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
+
+    // Brief pause so user sees the "done" state
+    setTimeout(() => {
+      document.getElementById('ai-loading-block').style.display = 'none';
+      const contentEl = document.getElementById('itinerary-content');
+      contentEl.style.display = 'block';
+
+      if (isFallback) {
+        document.getElementById('fallback-notice').style.display = 'flex';
+        const aiError = TW.load('ai_error');
+        if (aiError) {
+          document.getElementById('fallback-notice').innerHTML = `
+            <span>⚠</span>
+            <span>AI personalisation is unavailable right now: ${aiError}</span>
+          `;
+        }
+      }
+
+      buildDayTabs();
+      renderDay(1);
+    }, 400);
+  }
+
+  // ---- Kick off AI generation ----
+  (async () => {
+    let fallbackUsed = false;
+
+    TW.clearItineraryCache();
+
+    itinerary = await TW.getItinerary(setup, plan, status => {
+      fallbackUsed = status === 'fallback';
+    });
+
+    showItinerary(fallbackUsed);
+  })();
+</script>
+</body>
+</html>

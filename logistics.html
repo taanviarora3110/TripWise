@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Flights & Stays</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .selected-flight { border-color: var(--accent); background: rgba(232,201,126,0.04); }
+    .book-link { font-size: 0.78rem; color: var(--accent); cursor: pointer; }
+    .book-link:hover { text-decoration: underline; }
+    .transport-card { display: flex; gap: 12px; align-items: flex-start; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+    .transport-card:last-child { border-bottom: none; }
+    .transport-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    .savings-pill { background: rgba(111,207,151,0.1); border: 1px solid rgba(111,207,151,0.2); border-radius: 999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; color: var(--green); display: inline-block; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Trip<span>Wise</span></div>
+  <nav class="header-nav">
+    <a href="itinerary.html">← back</a>
+    <a href="index.html" onclick="TW.clear()">sign out</a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <div class="progress-bar mb-2">
+    <div class="progress-step done">1. setup</div>
+    <div class="progress-step done">2. plans</div>
+    <div class="progress-step done">3. itinerary</div>
+    <div class="progress-step active">4. logistics</div>
+    <div class="progress-step">5. budget</div>
+  </div>
+
+  <div class="fade-up">
+    <h1 class="display" style="font-size:1.8rem;margin-bottom:0.3rem">flights & stays</h1>
+    <p class="mb-2" id="logistics-sub">real options — no surprises, no upsells</p>
+  </div>
+
+  <!-- FLIGHTS -->
+  <div class="section-label fade-up-2" id="flight-label">flights</div>
+  <div id="flights-container" class="fade-up-2"></div>
+
+  <hr class="divider">
+
+  <!-- ACCOMMODATION -->
+  <div class="section-label fade-up-3" id="hotel-label">accommodation (matched to your preferences)</div>
+  <div id="hotels-container" class="fade-up-3"></div>
+
+  <hr class="divider">
+
+  <!-- TRANSPORT SUMMARY -->
+  <div class="section-label fade-up-4">transport breakdown (whole trip)</div>
+
+  <div class="stat-row fade-up-4" id="transport-stats"></div>
+
+  <div class="card fade-up-4" id="transport-detail" style="padding:0.5rem 1.25rem"></div>
+
+  <!-- money-saving tip -->
+  <div class="reality fade-up-4" id="saving-tip" style="margin-top:1rem">
+    <div class="label">money-saving insight</div>
+    <div id="saving-tip-text"></div>
+  </div>
+
+  <button class="btn btn-primary btn-full btn-lg" style="margin-top:1.5rem" onclick="TW.go('budget.html')">
+    run my budget reality check →
+  </button>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  TW.requireAuth();
+  const setup = TW.load('setup', {});
+  const plan  = TW.load('plan', { type: 'smart', price: 1850 });
+  const dest  = setup.dest || 'Tokyo';
+  const from  = setup.from || 'Chennai';
+
+  document.getElementById('logistics-sub').textContent = from + ' → ' + dest + ' · ' + (setup.days||5) + ' days';
+  document.getElementById('flight-label').textContent   = 'flights (' + from + ' → ' + dest + ')';
+  document.getElementById('hotel-label').textContent    = 'accommodation in ' + dest + ' (matched to your preferences)';
+
+  // flights
+  const flights = TW.mockFlights(from, dest);
+  const recIdx  = plan.type === 'luxury' ? 2 : plan.type === 'budget' ? 0 : 1;
+  let selectedFlight = recIdx;
+
+  const flightsEl = document.getElementById('flights-container');
+  flightsEl.innerHTML = flights.map((f, i) => `
+    <div class="card flight-row ${i === recIdx ? 'selected-flight' : ''}" id="flight-${i}" onclick="selectFlight(${i})" style="cursor:pointer;padding:1rem 1.25rem;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="flight-name">${f.airline} ${f.tag ? '<span class="badge badge-walk" style="margin-left:6px">' + f.tag + '</span>' : ''}</div>
+        <div class="flight-detail">${f.duration} · ${f.stops} · economy</div>
+      </div>
+      <div style="text-align:right">
+        <div class="flight-price">$${f.price}</div>
+        <div class="book-link" onclick="event.stopPropagation();alert('In the real app, this links to Amadeus / Skyscanner API')">view & book →</div>
+      </div>
+    </div>
+  `).join('');
+
+  function selectFlight(i) {
+    document.querySelectorAll('[id^=flight-]').forEach(el => el.classList.remove('selected-flight'));
+    document.getElementById('flight-' + i).classList.add('selected-flight');
+    selectedFlight = i;
+    TW.save('selected_flight', flights[i]);
+  }
+
+  // hotels
+  const hotels = TW.mockHotels(setup.prefs, plan.type);
+  const hotelsEl = document.getElementById('hotels-container');
+
+  hotelsEl.innerHTML = hotels.map((h, i) => `
+    <div class="card ${i===0?'selected':''}" style="margin-bottom:8px">
+      <div class="hotel-name">${h.name}</div>
+      <div class="hotel-sub">${h.type} · $${h.price}/night · ${h.area}</div>
+      <div class="badge-row" style="margin-bottom:0.5rem">
+        ${h.walking.map(w => `<span class="badge badge-walk">${w}</span>`).join('')}
+        ${h.transit.map(t => `<span class="badge badge-metro">${t}</span>`).join('')}
+      </div>
+      <div style="font-size:0.8rem;color:var(--green)">${h.saving}</div>
+      <div class="book-link" style="margin-top:0.5rem;display:inline-block" onclick="alert('In the real app: links to Booking.com or Airbnb API')">check availability →</div>
+    </div>
+  `).join('');
+
+  // transport summary
+  const transportData = {
+    budget: { walkPct: 70, metroCost: 42, cabCost: 18 },
+    smart:  { walkPct: 50, metroCost: 55, cabCost: 35 },
+    luxury: { walkPct: 30, metroCost: 20, cabCost: 180 },
+  }[plan.type] || { walkPct: 50, metroCost: 55, cabCost: 35 };
+
+  document.getElementById('transport-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${transportData.walkPct}%</div><div class="stat-lbl">free (walking)</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--blue)">$${transportData.metroCost}</div><div class="stat-lbl">metro (${setup.days||5} days)</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent)">$${transportData.cabCost}</div><div class="stat-lbl">cabs (est.)</div></div>
+  `;
+
+  document.getElementById('transport-detail').innerHTML = `
+    <div class="transport-card">
+      <div class="transport-icon">🚶</div>
+      <div>
+        <div class="fw-500 text-sm">walking (free)</div>
+        <div class="text-xs text-dim" style="margin-top:2px;line-height:1.5">Your accommodation puts ${transportData.walkPct}% of your activities within walking distance. Short stints only — max 20 min at a stretch (matching your constraint).</div>
+        <span class="savings-pill">saves ~$${Math.round((100-transportData.walkPct)/100*120)} vs full-cab plan</span>
+      </div>
+    </div>
+    <div class="transport-card">
+      <div class="transport-icon">🚇</div>
+      <div>
+        <div class="fw-500 text-sm">metro / subway</div>
+        <div class="text-xs text-dim" style="margin-top:2px;line-height:1.5">IC card (Suica/Pasmo) recommended — tap in/out, no ticket queues. Cheaper than single tickets. Load $50 at airport, refund remainder on departure.</div>
+        <span class="savings-pill">IC card saves ~$12 vs single tickets</span>
+      </div>
+    </div>
+    <div class="transport-card">
+      <div class="transport-icon">🚕</div>
+      <div>
+        <div class="fw-500 text-sm">taxi / cab</div>
+        <div class="text-xs text-dim" style="margin-top:2px;line-height:1.5">Tokyo taxis are expensive — ¥710 flag-fall (~$5). Use only for late nights or when carrying luggage. GoTaxi app recommended over hailing. Uber is limited in Tokyo.</div>
+        ${plan.type !== 'luxury' ? '<span class="savings-pill">tip: avoid cabs between 10am–8pm — metro is 4x cheaper</span>' : ''}
+      </div>
+    </div>
+    ${plan.type !== 'budget' ? `
+    <div class="transport-card">
+      <div class="transport-icon">🚌</div>
+      <div>
+        <div class="fw-500 text-sm">bus</div>
+        <div class="text-xs text-dim" style="margin-top:2px;line-height:1.5">Tokyo buses are cheap but complicated for non-Japanese speakers. Stick to metro unless your hotel is on a direct bus route — we'll flag this in the itinerary.</div>
+      </div>
+    </div>` : ''}
+  `;
+
+  // saving tip
+  const tips = {
+    budget:  `You've chosen the most walkable accommodation in ${dest}. By walking instead of taking cabs, you're saving approximately $${Math.round(transportData.walkPct * 1.4)} over ${setup.days||5} days. Biggest saving: buy a 72-hr unlimited metro pass on Day 1 ($22) instead of single tickets.`,
+    smart:   `Your hotel in the history corridor puts major sites within walking distance in the mornings, when it's less crowded. Load $50 on a Suica card at the airport. Return unused balance on day of departure.`,
+    luxury:  `Your hotel includes a 24-hr concierge who can pre-book private transfers. Request the airport transfer in advance — saves ~$30 vs on-demand booking. All skip-the-line passes are included in your plan.`,
+  };
+  document.getElementById('saving-tip-text').textContent = tips[plan.type] || tips.smart;
+</script>
+</body>
+</html>

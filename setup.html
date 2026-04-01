@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Plan Your Trip</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media(max-width:480px){ .two-col{ grid-template-columns:1fr; } }
+    .budget-display { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--accent); line-height: 1; margin: 0.5rem 0; }
+    .budget-tip { font-size: 0.78rem; color: var(--text3); }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Trip<span>Wise</span></div>
+  <nav class="header-nav">
+    <span id="user-greeting" class="text-dim text-sm"></span>
+    <a href="index.html" onclick="TW.clear()">sign out</a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <div class="progress-bar mb-2">
+    <div class="progress-step active">1. setup</div>
+    <div class="progress-step">2. plans</div>
+    <div class="progress-step">3. itinerary</div>
+    <div class="progress-step">4. logistics</div>
+    <div class="progress-step">5. budget</div>
+  </div>
+
+  <div class="fade-up">
+    <h1 class="display" style="font-size:1.8rem;margin-bottom:0.3rem">let's plan your trip</h1>
+    <p class="mb-2">answer honestly — the more real you are, the better we plan.</p>
+  </div>
+
+  <!-- SECTION: where & when -->
+  <div class="fade-up-2">
+    <div class="section-label">where & when</div>
+    <div class="two-col">
+      <div class="field">
+        <label>destination</label>
+        <input type="text" id="dest" placeholder="e.g. Tokyo, Bali, Paris">
+      </div>
+      <div class="field">
+        <label>travelling from</label>
+        <input type="text" id="from" placeholder="e.g. Chennai, Mumbai">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label>number of days</label>
+        <input type="number" id="days" placeholder="e.g. 5" min="1" max="30" value="5">
+      </div>
+      <div class="field">
+        <label>travel month</label>
+        <select id="month">
+          <option value="">-- pick a month --</option>
+          <option>January</option><option>February</option><option>March</option>
+          <option>April</option><option>May</option><option>June</option>
+          <option>July</option><option>August</option><option>September</option>
+          <option>October</option><option>November</option><option>December</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: who's travelling -->
+  <div class="fade-up-3">
+    <div class="section-label">who's travelling</div>
+    <div id="who-chips" class="chip-row mb-2">
+      <button class="chip active" data-value="solo">solo</button>
+      <button class="chip" data-value="couple">couple</button>
+      <button class="chip" data-value="with kids">with kids</button>
+      <button class="chip" data-value="elderly parents">elderly parents</button>
+      <button class="chip" data-value="group">group of friends</button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: travel personality -->
+  <div class="fade-up-3">
+    <div class="section-label" style="margin-bottom:0.75rem">how tired do you want to be?</div>
+    <div id="pace-btns" class="pace-row mb-2">
+      <button class="pace-btn" data-value="relaxed">
+        <span class="icon">😴</span>
+        <span class="name">relaxed</span>
+        <span style="font-size:0.7rem;color:var(--text3);display:block;margin-top:4px">2–3 things/day, lots of rest</span>
+      </button>
+      <button class="pace-btn active" data-value="balanced">
+        <span class="icon">🚶</span>
+        <span class="name">balanced</span>
+        <span style="font-size:0.7rem;color:var(--text3);display:block;margin-top:4px">4–5 things/day, steady pace</span>
+      </button>
+      <button class="pace-btn" data-value="insane">
+        <span class="icon">🏃</span>
+        <span class="name">insane explorer</span>
+        <span style="font-size:0.7rem;color:var(--text3);display:block;margin-top:4px">8+ things/day, minimal breaks</span>
+      </button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: interests -->
+  <div class="fade-up-3">
+    <div class="section-label">i love (pick all that apply)</div>
+    <div id="prefs-grid" class="pref-grid mb-2">
+      <div class="pref-tile active" data-value="history"><div class="icon">🏛️</div><div class="label">history</div></div>
+      <div class="pref-tile" data-value="food"><div class="icon">🍜</div><div class="label">food & dining</div></div>
+      <div class="pref-tile" data-value="nightlife"><div class="icon">🎉</div><div class="label">nightlife</div></div>
+      <div class="pref-tile active" data-value="nature"><div class="icon">🌿</div><div class="label">nature</div></div>
+      <div class="pref-tile" data-value="shopping"><div class="icon">🛍️</div><div class="label">shopping</div></div>
+      <div class="pref-tile active" data-value="culture"><div class="icon">🎭</div><div class="label">culture</div></div>
+      <div class="pref-tile" data-value="photography"><div class="icon">📸</div><div class="label">photography</div></div>
+      <div class="pref-tile active" data-value="temples"><div class="icon">⛩️</div><div class="label">temples</div></div>
+      <div class="pref-tile" data-value="art"><div class="icon">🎨</div><div class="label">art & museums</div></div>
+      <div class="pref-tile" data-value="adventure"><div class="icon">🧗</div><div class="label">adventure</div></div>
+      <div class="pref-tile" data-value="beaches"><div class="icon">🏖️</div><div class="label">beaches</div></div>
+      <div class="pref-tile" data-value="cafes"><div class="icon">☕</div><div class="label">cafés & slow mornings</div></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: constraints -->
+  <div class="fade-up-3">
+    <div class="section-label">what can't you do? (be honest — this shapes everything)</div>
+    <div class="card" id="constraints-list" style="padding:0.5rem 1.25rem">
+      <div class="constraint-item" data-key="no_long_walk">
+        <span class="constraint-text">can't walk more than 30 min at a stretch</span>
+        <div class="toggle-switch on"></div>
+      </div>
+      <div class="constraint-item" data-key="no_early">
+        <span class="constraint-text">no early mornings (before 9 am)</span>
+        <div class="toggle-switch"></div>
+      </div>
+      <div class="constraint-item" data-key="stroller">
+        <span class="constraint-text">stroller-friendly routes only</span>
+        <div class="toggle-switch"></div>
+      </div>
+      <div class="constraint-item" data-key="no_nightlife">
+        <span class="constraint-text">no nightlife or late evenings</span>
+        <div class="toggle-switch"></div>
+      </div>
+      <div class="constraint-item" data-key="rest_zones">
+        <span class="constraint-text">need rest zones every 2 hours</span>
+        <div class="toggle-switch on"></div>
+      </div>
+      <div class="constraint-item" data-key="no_stairs">
+        <span class="constraint-text">can't do lots of stairs / steep terrain</span>
+        <div class="toggle-switch"></div>
+      </div>
+      <div class="constraint-item" data-key="dietary">
+        <span class="constraint-text">dietary restrictions (vegetarian / vegan / halal)</span>
+        <div class="toggle-switch"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: budget -->
+  <div class="fade-up-4">
+    <div class="section-label">total budget (USD, for the whole trip)</div>
+    <div id="budget-display" class="budget-display">$2,000</div>
+    <div id="budget-tip" class="budget-tip mb-1">per-person · includes flights, stays, food & transport</div>
+    <div class="range-wrap">
+      <input type="range" id="budget-slider" min="300" max="8000" step="50" value="2000">
+      <div class="range-labels"><span>$300</span><span>$4,000</span><span>$8,000</span></div>
+    </div>
+    <div id="budget-context" class="reality" style="margin-top:1rem">
+      <div class="label">what this gets you</div>
+      <div id="budget-context-text">Comfortable budget travel. Hostel or budget Airbnb, street food + 1 restaurant/day, metro everywhere. You'll have a great trip.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div id="form-error" style="color:var(--red);font-size:0.85rem;margin-bottom:1rem;display:none">
+    Please fill in your destination and where you're travelling from.
+  </div>
+
+  <button class="btn btn-primary btn-full btn-lg fade-up-4" onclick="saveAndContinue()">
+    find my perfect plans →
+  </button>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  const user = TW.requireAuth();
+  if (user) document.getElementById('user-greeting').textContent = 'hi, ' + user.name;
+
+  // restore saved setup
+  const saved = TW.load('setup', {});
+  if (saved.dest)  document.getElementById('dest').value  = saved.dest;
+  if (saved.from)  document.getElementById('from').value  = saved.from;
+  if (saved.days)  document.getElementById('days').value  = saved.days;
+  if (saved.month) document.getElementById('month').value = saved.month;
+
+  // init interactions
+  TW.initChips(document.getElementById('who-chips'), false);
+  TW.initPace(document.getElementById('pace-btns'));
+  TW.initPrefTiles(document.getElementById('prefs-grid'));
+  TW.initToggles(document.getElementById('constraints-list'));
+
+  // restore chip/pref selections
+  if (saved.who) {
+    document.querySelectorAll('#who-chips .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.value === saved.who);
+    });
+  }
+
+  // budget slider
+  const slider = document.getElementById('budget-slider');
+  const display = document.getElementById('budget-display');
+  const contextText = document.getElementById('budget-context-text');
+
+  const budgetMessages = [
+    [300,  800,  "Tight but doable. Hostels, street food, free attractions only. Skip paid museums. Possible — needs discipline."],
+    [800,  1500, "Budget travel. Hostel or cheap guesthouse, mostly street food, metro everywhere. Good memories, real constraints."],
+    [1500, 2500, "Comfortable budget travel. Hostel or budget Airbnb, street food + 1 restaurant/day, metro everywhere. You'll have a great trip."],
+    [2500, 4000, "Mid-range. Decent hotel, mix of eating out + street food, occasional cab. Stress-free but not flashy."],
+    [4000, 6000, "Comfortable. Good hotel, restaurants every night, private transfers when needed. Very nice trip."],
+    [6000, 9000, "Luxury. Premium hotel, fine dining, skip queues, private guides. Minimal friction — maximum comfort."],
+  ];
+
+  function updateBudget(val) {
+    val = parseInt(val);
+    display.textContent = '$' + val.toLocaleString();
+    const msg = budgetMessages.find(([lo, hi]) => val >= lo && val < hi);
+    if (msg) contextText.textContent = msg[2];
+  }
+
+  if (saved.budget) slider.value = saved.budget;
+  updateBudget(slider.value);
+  slider.addEventListener('input', () => updateBudget(slider.value));
+
+  function saveAndContinue() {
+    const dest = document.getElementById('dest').value.trim();
+    const from = document.getElementById('from').value.trim();
+    const err  = document.getElementById('form-error');
+
+    if (!dest || !from) { err.style.display = 'block'; return; }
+    err.style.display = 'none';
+
+    TW.save('setup', {
+      dest,
+      from,
+      days:        parseInt(document.getElementById('days').value) || 5,
+      month:       document.getElementById('month').value,
+      who:         TW.getActiveChips(document.getElementById('who-chips'))[0] || 'solo',
+      pace:        TW.getActivePace(document.getElementById('pace-btns')),
+      prefs:       TW.getActivePrefs(document.getElementById('prefs-grid')),
+      constraints: TW.getToggles(document.getElementById('constraints-list')),
+      budget:      parseInt(slider.value),
+    });
+
+    window.location.href = 'plans.html';
+  }
+</script>
+</body>
+</html>

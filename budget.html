@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Budget Check</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .budget-summary { display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .total-num { font-family: 'Playfair Display', serif; font-size: 3rem; line-height: 1; }
+    .total-label { font-size: 0.8rem; color: var(--text3); margin-bottom: 0.4rem; }
+    .budget-vs { font-size: 1.1rem; font-weight: 300; color: var(--text2); }
+    .buffer-tag { display: inline-block; padding: 0.35rem 1rem; border-radius: 999px; font-size: 0.82rem; font-weight: 500; }
+    .day-spend { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .day-spend:last-child { border-bottom: none; }
+    .overspend-item { padding: 0.85rem 1rem; border-left: 2px solid var(--red); background: rgba(235,87,87,0.04); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 8px; }
+    .overspend-title { font-size: 0.88rem; font-weight: 500; color: var(--text); margin-bottom: 0.2rem; }
+    .overspend-detail { font-size: 0.78rem; color: var(--text3); line-height: 1.5; }
+    .tip-item { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .tip-item:last-child { border-bottom: none; }
+    .tip-icon { color: var(--green); flex-shrink: 0; }
+    .pie-wrap { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+    .legend { flex: 1; min-width: 160px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.82rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Trip<span>Wise</span></div>
+  <nav class="header-nav">
+    <a href="logistics.html">← back</a>
+    <a href="setup.html">plan another trip</a>
+    <a href="index.html" onclick="TW.clear()">sign out</a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <div class="progress-bar mb-2">
+    <div class="progress-step done">1. setup</div>
+    <div class="progress-step done">2. plans</div>
+    <div class="progress-step done">3. itinerary</div>
+    <div class="progress-step done">4. logistics</div>
+    <div class="progress-step active">5. budget</div>
+  </div>
+
+  <div class="fade-up">
+    <h1 class="display" style="font-size:1.8rem;margin-bottom:0.3rem">budget reality check</h1>
+    <p class="mb-2">where you'll actually spend money — no optimism bias</p>
+  </div>
+
+  <!-- Summary -->
+  <div class="budget-summary fade-up-2">
+    <div>
+      <div class="total-label">estimated total</div>
+      <div class="total-num" id="total-num">$1,850</div>
+    </div>
+    <div>
+      <div class="total-label">your budget</div>
+      <div class="budget-vs" id="budget-vs">$2,000</div>
+    </div>
+    <div>
+      <div class="total-label">buffer</div>
+      <div class="buffer-tag" id="buffer-tag">$150 left</div>
+    </div>
+  </div>
+
+  <!-- Budget bars -->
+  <div class="section-label fade-up-2">where the money goes</div>
+  <div class="card fade-up-2" style="padding:1rem 1.25rem;margin-bottom:1.5rem" id="budget-bars"></div>
+
+  <!-- Daily spend breakdown -->
+  <div class="section-label fade-up-3">estimated daily spend</div>
+  <div class="card fade-up-3" style="padding:0.5rem 1.25rem;margin-bottom:1.5rem" id="daily-breakdown"></div>
+
+  <!-- Overspend warnings -->
+  <div class="section-label fade-up-3" style="color:var(--red)">you will overspend here ⚠</div>
+  <div class="fade-up-3" id="overspend-list" style="margin-bottom:1.5rem"></div>
+
+  <!-- Money saving tips -->
+  <div class="section-label fade-up-4">how to save money</div>
+  <div class="card fade-up-4" style="padding:0.5rem 1.25rem;margin-bottom:1.5rem" id="saving-tips"></div>
+
+  <!-- Ideal vs Realistic comparison -->
+  <div class="section-label fade-up-4">ideal plan vs. reality</div>
+  <div class="fade-up-4" id="compare-block" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem"></div>
+
+  <!-- All done -->
+  <div class="card success fade-up-4" style="margin-top:0.5rem">
+    <div class="fw-500 mb-1">your full plan is ready</div>
+    <div class="text-sm text-muted" style="line-height:1.7" id="final-summary"></div>
+    <div style="display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="window.print()">save / print plan</button>
+      <button class="btn btn-outline" onclick="TW.go('setup.html')">plan another trip</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  TW.requireAuth();
+  const setup  = TW.load('setup', {});
+  const plan   = TW.load('plan', { type: 'smart', price: 1850 });
+  const budget = setup.budget || 2000;
+  const days   = parseInt(setup.days) || 5;
+  const dest   = setup.dest || 'Tokyo';
+
+  const b = TW.mockBudget(plan.type, budget);
+
+  // header
+  document.getElementById('total-num').textContent = TW.fmt.usd(b.total);
+  document.getElementById('budget-vs').textContent = TW.fmt.usd(budget);
+
+  const bufferEl = document.getElementById('buffer-tag');
+  if (b.over) {
+    bufferEl.textContent = TW.fmt.usd(b.total - budget) + ' OVER';
+    bufferEl.style.background = 'rgba(235,87,87,0.15)';
+    bufferEl.style.color = 'var(--red)';
+  } else {
+    bufferEl.textContent = TW.fmt.usd(b.buffer) + ' left';
+    bufferEl.style.background = 'rgba(111,207,151,0.12)';
+    bufferEl.style.color = 'var(--green)';
+  }
+
+  // budget bars
+  const categories = [
+    { label: 'flights (round trip)',         amount: b.flight,     max: Math.round(b.flight*1.6),  color: '#56b4e0' },
+    { label: 'accommodation (' + days + ' nights)', amount: b.hotel, max: Math.round(b.hotel*1.4), color: '#e8c97e' },
+    { label: 'food & drinks',                amount: b.food,       max: Math.round(b.food*1.5),    color: '#6fcf97' },
+    { label: 'activities & entry fees',      amount: b.activities, max: Math.round(b.activities*1.6), color: '#9b8cf7' },
+    { label: 'transport (metro + cabs)',      amount: b.transport,  max: Math.round(b.transport*1.4), color: '#f0a05a' },
+    { label: 'shopping / misc',              amount: b.misc,       max: Math.round(b.misc*2.5),    color: '#eb5757' },
+  ];
+
+  const barsEl = document.getElementById('budget-bars');
+  const totalKnown = categories.reduce((s,c) => s + c.amount, 0);
+
+  barsEl.innerHTML = categories.map(c => {
+    const pct = Math.round((c.amount / budget) * 100);
+    return `
+      <div class="budget-item">
+        <div class="budget-item-header">
+          <span>${c.label}</span>
+          <span style="color:var(--text2)">${TW.fmt.usd(c.amount)} <span style="color:var(--text3);font-size:0.75rem">/ ${TW.fmt.usd(c.max)} max</span></span>
+        </div>
+        <div class="budget-bar-bg">
+          <div class="budget-bar-fill" data-pct="${pct}" style="width:0%;background:${c.color}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  TW.animateBudgetBars();
+
+  // daily breakdown
+  const dailyBase = Math.round((b.food + b.transport + b.activities) / days);
+  const dayBreakdowns = [
+    { label: 'Day 1 — temples & old tokyo', amount: dailyBase - 10, note: 'mostly free attractions' },
+    { label: 'Day 2 — shibuya & harajuku',  amount: dailyBase + 45, note: '⚠ overspend risk — shopping area', warn: true },
+    { label: 'Day 3 — history & markets',   amount: dailyBase,      note: 'museum fees + market lunch' },
+    { label: 'Day 4 — nature & parks',      amount: dailyBase - 15, note: 'mostly free parks' },
+    { label: 'Day 5 — hidden gems',         amount: dailyBase + 20, note: 'souvenirs + airport transport' },
+  ].slice(0, days);
+
+  document.getElementById('daily-breakdown').innerHTML = dayBreakdowns.map(d => `
+    <div class="day-spend">
+      <div>
+        <span class="fw-500">${d.label}</span>
+        <span style="margin-left:8px;font-size:0.75rem;color:${d.warn?'var(--red)':'var(--text3)'}">${d.note}</span>
+      </div>
+      <span style="color:${d.warn?'var(--red)':'var(--text2)'}">~${TW.fmt.usd(d.amount)}</span>
+    </div>
+  `).join('');
+
+  // overspend warnings
+  const warnings = [
+    { title: 'Day 2: Shibuya/Harajuku', detail: 'Average tourist spends $40–80 more than planned here. The shops are designed to extract money. Bring cash only, leave your card at the hotel. Set a hard limit before you enter Takeshita Street.' },
+    { title: 'Airport transport (both ways)', detail: 'Narita Express costs ¥3,070 each way (~$21). Many people forget this isn\'t in "city transport" budgets. Budget $50 total for airport transfers. Or take the Limousine Bus — slower, but cheaper at ¥3,200 round trip.' },
+    { title: 'Convenience store creep', detail: 'Japan\'s konbini (7-Eleven, Lawson, FamilyMart) are addictive. Easy to spend ¥500–1000/day without noticing. They\'re genuinely great — just be aware it adds up to $30–50 over a week.' },
+  ];
+
+  document.getElementById('overspend-list').innerHTML = warnings.map(w => `
+    <div class="overspend-item">
+      <div class="overspend-title">${w.title}</div>
+      <div class="overspend-detail">${w.detail}</div>
+    </div>
+  `).join('');
+
+  // saving tips
+  const tips = [
+    { icon: '✓', text: 'Buy a 72-hr or 7-day metro pass at the airport. Saves $8–15 vs single tickets depending on your itinerary.' },
+    { icon: '✓', text: 'Eat lunch at standing sushi bars and ramen counters. Same quality, half the price of sit-down restaurants.' },
+    { icon: '✓', text: 'Many temple gardens are free (Ueno, Yoyogi). Skip paid ones unless specifically on your preferences list.' },
+    { icon: '✓', text: 'Book hotels 3+ months ahead — prices in Tokyo jump 40–60% for last-minute bookings.' },
+    { icon: '✓', text: 'Get a Suica IC card for transit — it also works at convenience stores and some restaurants, avoiding cash withdrawal fees.' },
+  ];
+
+  document.getElementById('saving-tips').innerHTML = tips.map(t => `
+    <div class="tip-item">
+      <span class="tip-icon">${t.icon}</span>
+      <span class="text-muted" style="line-height:1.6">${t.text}</span>
+    </div>
+  `).join('');
+
+  // ideal vs reality
+  document.getElementById('compare-block').innerHTML = `
+    <div class="card" style="background:rgba(111,207,151,0.04);border-color:rgba(111,207,151,0.2)">
+      <div class="section-label" style="color:var(--green)">ideal plan</div>
+      <div class="text-sm text-muted" style="line-height:1.7;margin-top:0.5rem">Stick to itinerary exactly. Walk everywhere. Street food for lunch. One restaurant dinner. Metro only.</div>
+      <div style="margin-top:0.75rem;font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--green)">${TW.fmt.usd(b.total - 80)}</div>
+    </div>
+    <div class="card" style="background:rgba(232,201,126,0.04);border-color:rgba(232,201,126,0.2)">
+      <div class="section-label" style="color:var(--accent)">realistic plan</div>
+      <div class="text-sm text-muted" style="line-height:1.7;margin-top:0.5rem">1–2 impulse buys. Extra café stop. 1 cab because you're tired. Day 2 slight overspend. This is normal.</div>
+      <div style="margin-top:0.75rem;font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--accent)">${TW.fmt.usd(b.total + 90)}</div>
+    </div>
+  `;
+
+  // final summary
+  document.getElementById('final-summary').textContent =
+    `${days}-day trip to ${dest} · ${plan.type === 'budget' ? 'Budget Traveler' : plan.type === 'luxury' ? 'Luxury Comfort' : 'Smart Explorer'} plan · ` +
+    `estimated ${TW.fmt.usd(b.total)} out of your ${TW.fmt.usd(budget)} budget. ` +
+    (b.over ? `This plan exceeds your budget by ${TW.fmt.usd(b.total - budget)} — consider switching to the Smart Explorer plan to stay within budget.` :
+     `You have a ${TW.fmt.usd(b.buffer)} buffer. Enough to handle one surprise without stress.`);
+</script>
+</body>
+</html>

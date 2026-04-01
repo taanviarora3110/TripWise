@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripWise — Travel Smarter</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .tab-row { display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    .form-tab { padding: 0.65rem 1.25rem; font-size: 0.9rem; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: 'DM Sans', sans-serif; font-weight: 300; transition: all 0.2s; }
+    .form-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+    .or-divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+    .or-divider::before, .or-divider::after { content: ''; flex: 1; border-top: 1px solid var(--border); }
+    .or-divider span { font-size: 0.75rem; color: var(--text3); }
+    .social-btn { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; margin-bottom: 0.75rem; }
+    .social-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+    .error-msg { color: var(--red); font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+    .hero-stat { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+    .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--accent); }
+    .hero-stat-text { font-size: 0.8rem; color: var(--text3); }
+    .destination-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.5rem; }
+    .dest-tag { padding: 0.3rem 0.75rem; border: 1px solid var(--border); border-radius: 999px; font-size: 0.75rem; color: var(--text3); }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <!-- LEFT: hero panel -->
+  <div class="login-hero">
+    <div class="login-hero-bg"></div>
+    <div class="login-hero-content">
+      <div class="logo mb-2">Trip<span>Wise</span></div>
+      <div class="login-hero-tagline fade-up">
+        Travel that fits<br>your <em>real</em> life.
+      </div>
+      <p class="login-hero-sub fade-up-2" style="margin-top:1rem">
+        Not your fantasy trip. Your actual trip — with your budget, your knees, your kids, and your 8pm bedtime.
+      </p>
+
+      <ul class="login-features fade-up-3">
+        <li>Constraint-first planning — tell us what you <em>can't</em> do, not just what you want</li>
+        <li>3 itinerary tiers: budget, smart, or comfort — all personalised for you</li>
+        <li>Walking-distance first: we minimise your transport costs automatically</li>
+        <li>Budget honesty — "you will overspend here on Day 2" — real warnings</li>
+        <li>Reality checks: what's actually worth it vs. Instagram hype</li>
+      </ul>
+
+      <div style="margin-top:2rem" class="fade-up-4">
+        <div class="hero-stat"><div class="hero-stat-num">68%</div><div class="hero-stat-text">of activities in our plans are walking-distance from your stay</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">$420</div><div class="hero-stat-text">average savings vs. typical travel bookings</div></div>
+      </div>
+
+      <div class="destination-tags fade-up-4">
+        <span class="dest-tag">Tokyo</span>
+        <span class="dest-tag">Bali</span>
+        <span class="dest-tag">Paris</span>
+        <span class="dest-tag">Kyoto</span>
+        <span class="dest-tag">Bangkok</span>
+        <span class="dest-tag">Amsterdam</span>
+        <span class="dest-tag">Rome</span>
+        <span class="dest-tag">+ 200 more</span>
+      </div>
+    </div>
+
+    <div class="login-hero-content" style="margin-top:2rem">
+      <p class="text-xs text-dim">No ads. No affiliate pushing. We show you the cheapest option first, always.</p>
+    </div>
+  </div>
+
+  <!-- RIGHT: form panel -->
+  <div class="login-form-side">
+    <div style="max-width:380px;width:100%;margin:0 auto">
+
+      <div class="fade-up">
+        <div class="tab-row">
+          <button class="form-tab active" onclick="showTab('login')">sign in</button>
+          <button class="form-tab" onclick="showTab('signup')">create account</button>
+        </div>
+      </div>
+
+      <!-- LOGIN PANEL -->
+      <div id="panel-login" class="form-panel active fade-up-2">
+        <div class="field">
+          <label>email</label>
+          <input type="email" id="login-email" placeholder="you@email.com" value="demo@tripwise.app">
+        </div>
+        <div class="field">
+          <label>password</label>
+          <input type="password" id="login-pass" placeholder="••••••••" value="demo1234">
+        </div>
+        <div id="login-error" class="error-msg">Incorrect email or password.</div>
+        <button class="btn btn-primary btn-full btn-lg mt-1" onclick="handleLogin()">
+          sign in →
+        </button>
+        <p style="text-align:center;margin-top:1rem" class="text-xs text-dim">
+          Demo: demo@tripwise.app / demo1234
+        </p>
+
+        <div class="or-divider"><span>or continue with</span></div>
+
+        <button class="social-btn" onclick="demoLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          continue with Google
+        </button>
+        <button class="social-btn" onclick="demoLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+          continue as guest (demo)
+        </button>
+      </div>
+
+      <!-- SIGNUP PANEL -->
+      <div id="panel-signup" class="form-panel fade-up-2">
+        <div class="field">
+          <label>your name</label>
+          <input type="text" id="signup-name" placeholder="Arjun">
+        </div>
+        <div class="field">
+          <label>email</label>
+          <input type="email" id="signup-email" placeholder="you@email.com">
+        </div>
+        <div class="field">
+          <label>password</label>
+          <input type="password" id="signup-pass" placeholder="min. 8 characters">
+        </div>
+        <div id="signup-error" class="error-msg">Please fill in all fields.</div>
+        <button class="btn btn-primary btn-full btn-lg mt-1" onclick="handleSignup()">
+          create account →
+        </button>
+        <p class="text-xs text-dim" style="margin-top:1rem;text-align:center;line-height:1.6">
+          By continuing you agree to our terms. No spam. No selling your data.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  // if already logged in, go straight to setup
+  if (TW.load('user')) window.location.href = 'setup.html';
+
+  function showTab(tab) {
+    document.querySelectorAll('.form-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='signup')));
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+  }
+
+  function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    const err   = document.getElementById('login-error');
+    if (!email || !pass) { err.style.display = 'block'; err.textContent = 'Please enter email and password.'; return; }
+    // demo: accept any credentials
+    err.style.display = 'none';
+    TW.save('user', { name: email.split('@')[0], email });
+    window.location.href = 'setup.html';
+  }
+
+  function handleSignup() {
+    const name  = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass  = document.getElementById('signup-pass').value;
+    const err   = document.getElementById('signup-error');
+    if (!name || !email || !pass) { err.style.display = 'block'; return; }
+    if (pass.length < 8) { err.style.display = 'block'; err.textContent = 'Password must be at least 8 characters.'; return; }
+    err.style.display = 'none';
+    TW.save('user', { name, email });
+    window.location.href = 'setup.html';
+  }
+
+  function demoLogin() {
+    TW.save('user', { name: 'Traveller', email: 'demo@tripwise.app' });
+    window.location.href = 'setup.html';
+  }
+</script>
+</body>
+</html>
